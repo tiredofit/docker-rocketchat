@@ -1,0 +1,16 @@
+#!/usr/bin/with-contenv bash
+
+
+if [ ! -f /tmp/state/10-node ]; then
+sleep 2
+        mkdir -p /app/uploads
+	chown -R rocketchat /app/uploads
+        mkdir -p /tmp/state/
+	echo 'Initialization Complete' >/tmp/state/10-node
+fi
+
+cd /app/bundle
+echo ''
+echo '** Starting Rocketchat..'
+exec s6-setuidgid rocketchat node main.js
+
