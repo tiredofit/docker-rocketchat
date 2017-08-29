@@ -1,3 +1,8 @@
+## 2.2 2017-08-28 <dave at tiredofit dot ca>
+
+* Bump to 0.58.2
+* Reduce Layers
+
 ## 2.1 2017-08-03 <dave at tiredofit dot ca>
 
 * Fix Uploads Section

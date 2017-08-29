@@ -2,9 +2,9 @@ FROM tiredofit/alpine:3.4
 MAINTAINER Dave Conroy <dave at tiredofit dot ca>
 
 ### Set Environment Variables
-ENV RC_VERSION 0.58.1
+ENV RC_VERSION 0.58.2 \
 # needs a mongoinstance - defaults to container linking with alias 'db'
-ENV MONGO_URL=mongodb://db:27017/meteor \
+    MONGO_URL=mongodb://db:27017/meteor \
     HOME=/tmp \
     PORT=3000 \
     ROOT_URL=http://localhost:3000 \
