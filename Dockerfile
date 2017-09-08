@@ -1,5 +1,5 @@
 FROM tiredofit/alpine:3.4
-MAINTAINER Dave Conroy <dave at tiredofit dot ca>
+LABEL maintainer="Dave Conroy (dave at tiredofit dot ca)"
 
 ### Set Environment Variables
 ENV RC_VERSION=0.58.2 \
