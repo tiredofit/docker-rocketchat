@@ -2,7 +2,7 @@ FROM tiredofit/alpine:3.4
 LABEL maintainer="Dave Conroy (dave at tiredofit dot ca)"
 
 ### Set Environment Variables
-ENV RC_VERSION=0.59.0-rc.4 \
+ENV RC_VERSION=0.58.4 \
 # needs a mongoinstance - defaults to container linking with alias 'db'
     MONGO_URL=mongodb://db:27017/meteor \
     HOME=/tmp \
