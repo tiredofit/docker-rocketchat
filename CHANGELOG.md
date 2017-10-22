@@ -1,7 +1,7 @@
-## 2.2 2017-08-28 <dave at tiredofit dot ca>
+## 2.2 2017-10-22 <dave at tiredofit dot ca>
 
-* Bump to 0.58.2
-* Reduce Layers
+* Added GLIBC for Google Vision
+* Update to 0.59.1
 
 ## 2.1 2017-08-03 <dave at tiredofit dot ca>
 

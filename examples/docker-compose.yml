@@ -3,54 +3,50 @@ version: '2'
 services:
   rocketchat-app:
     container_name: rocketchat-app
-    image: tiredofit/rocketchat
+    image: registry.selfdesign.org/docker/rocketchat:2.0
+    #ports:
+      #- 3000:3000
     environment: 
-      - VIRTUAL_HOST=rocketchat.example.org
+      - VIRTUAL_HOST=url.hostname.com
       - VIRTUAL_NETWORK=nginx-proxy
       - VIRTUAL_PORT=3000
-      - LETSENCRYPT_HOST=rocketchat.example.org
-      - LETSENCRYPT_EMAIL=techsupport@example.org
+      - LETSENCRYPT_HOST=url.hostname.com
+      - LETSENCRYPT_EMAIL=user@hostname.com
 
       - ZABBIX_HOSTNAME=rocketchat-app
       
       - HOME=/tmp
       - PORT=3000
-      - ROOT_URL=https://talk.example.org 
-      - AVATARS_PATH=/app/uploads/avatars
-      #- Accounts_AvatarStorePath=/app/uploads/avatars
+      - ROOT_URL=http://localhost:3000 
+      - Accounts_AvatarStorePath=/app/uploads
       - MONGO_URL=mongodb://rocketchat-db:27017/rocketchat
       - MONGO_OPLOG_URL=mongodb://rocketchat-db:27017/local
-
       - MAIL_URL=smtp://postfix-relay:25
-
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASS=password
-      - ADMIN_EMAIL=noreply@example.org
+      - ADMIN_USERNAME=sdadmin
+      - ADMIN_PASS=SelfDesign2017
+      - ADMIN_EMAIL=noreply@selfdesign.org
     volumes:
-      - ./data:/app/uploads
+      - ./uploads:/app/uploads
     restart: always
     networks:
       - proxy-tier
 
   rocketchat-db:
     container_name: rocketchat-db
-    image: tiredofit/mongo
+    #image: mongo:3.2
+    image: registry.selfdesign.org/docker/mongo:2.0
     restart: unless-stopped
     volumes:
-     - ./mongo:/data/db
+     - /var/local/db/rocketchat.example.com:/data/db
      - ./dbbackup:/dump
     command: mongod --smallfiles --oplogSize 128 --replSet rs0 
     networks:
       - proxy-tier
-    environment:
-      - ZABBIX_HOSTNAME=rocketchat-db
-
 
   rocketchat-db-init:
     container_name: rocketchat-db-init
-    image: tiredofit/mongo:2.0
-    command: 'mongo rocketchat-db/rocketchat --eval "rs.initiate({ _id: ''rs0'', members: [ { 
-_id: 0, host: ''localhost:27017'' } ]})"'
+    image: registry.selfdesign.org/docker/mongo:2.0
+    command: 'mongo rocketchat-db/rocketchat --eval "rs.initiate({ _id: ''rs0'', members: [ { _id: 0, host: ''localhost:27017'' } ]})"'
     depends_on:
       - rocketchat-db
     networks:
@@ -62,47 +58,25 @@ _id: 0, host: ''localhost:27017'' } ]})"'
     restart: unless-stopped
     environment:
       - ROCKETCHAT_URL=rocketchat-app:3000
-      #- ROCKETCHAT_ROOM=it-support,heartbeats
-      - ROCKETCHAT_ROOM=''
-      - ROCKETCHAT_USER=sdbot
-      - ROCKETCHAT_PASSWORD=LANGLEY-gabber-orange-FRESH
-      - BOT_NAME=sdbot
-      - LISTEN_ON_ALL_PUBLIC=true
-      #- LISTEN_ON_ALL_PUBLIC=false
-      - RESPOND_TO_DM=true
-      - RESPOND_TO_EDITED=true
-      - MONGODB_URL=mongodb://rocketchat-db/hubot-brain
+      - ROCKETCHAT_ROOM=GENERAL
+      - ROCKETCHAT_USER=bot
+      - ROCKETCHAT_PASSWORD=botpassword
+      - BOT_NAME=bot
   # you can add more scripts as you'd like here, they need to be installable by npm
-      - EXTERNAL_SCRIPTS=hubot-mongodb-brain,hubot-help,hubot-seen,hubot-kanye
-
-
+      - EXTERNAL_SCRIPTS=hubot-help,hubot-seen,hubot-links,hubot-diagnostics
     depends_on:
       - rocketchat-app
     volumes:
       - ./scripts:/home/hubot/scripts
-      - /etc/localtime:/etc/localtime:ro
-  # this is used to expose the hubot port for notifications on the host on port 3001, e.g. for hubot-jenkins-notifier 
+  # this is used to expose the hubot port for notifications on the host on port 3001, e.g. for hubot-jenkins-notifier
     ports:
       - 3001:8080
     networks:
       - proxy-tier
 
-  rocketchat-hubot-redis:
-    container_name: rocketchat-hubot-redis
-    restart: always
-    image: tiredofit/redis:latest
-    networks:
-      - proxy-tier
-    volumes:
-    - ./redis:/var/lib/redis:Z
-    environment:
-    - ZABBIX_HOSTNAME=rocketchat-hubot-redis
-    networks:
-      - proxy-tier
-
-
 networks:
   proxy-tier:
     external:
       name: nginx-proxy
+
 

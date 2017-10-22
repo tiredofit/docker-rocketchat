@@ -1,8 +1,8 @@
-FROM tiredofit/alpine:3.4
+FROM tiredofit/nodejs:4-latest
 LABEL maintainer="Dave Conroy (dave at tiredofit dot ca)"
 
 ### Set Environment Variables
-ENV RC_VERSION=0.59.0-rc.4 \
+ENV RC_VERSION=0.59.1 \
 # needs a mongoinstance - defaults to container linking with alias 'db'
     MONGO_URL=mongodb://db:27017/meteor \
     HOME=/tmp \
@@ -17,25 +17,21 @@ RUN addgroup -g 1100 rocketchat && \
     chown rocketchat:rocketchat /app/uploads
 
 ### Build Rocketchat
-# gpg: key 4FD08014: public key "Rocket.Chat Buildmaster <buildmaster@rocket.chat>" imported
 RUN apk update && \
+    mkdir -p /usr/src && \
+    curl -ssL https://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub && \
+    curl -ssL https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.25-r0/glibc-2.25-r0.apk -o glibc-2.25-r0.apk && \
+    apk add glibc-2.25-r0.apk && \
+    rm -rf glibc-2.25-r0.apk && \
     apk add --no-cache \
         curl \
         g++ \
-        gnupg \
-        nodejs-lts \ 
         make \
         python && \
-    gpg --keyserver pgp.mit.edu --recv-keys "0E163286C20D07B9787EBE9FD7F9D0414FD08104" && \
     cd /app && \
-    curl -fSL "https://rocket.chat/releases/${RC_VERSION}/download" -o rocket.chat.tgz && \
-    curl -fSL "https://rocket.chat/releases/${RC_VERSION}/asc" -o rocket.chat.tgz.asc && \
-    gpg --batch --verify rocket.chat.tgz.asc rocket.chat.tgz && \
-    tar zxvf rocket.chat.tgz && \
-    rm rocket.chat.tgz rocket.chat.tgz.asc && \
+    curl -fssL "https://download.rocket.chat/build/rocket.chat-${RC_VERSION}.tgz" | tar xvfz - -C /app/ && \
     cd /app/bundle/programs/server && \
-    npm install && \
-    apk del gnupg
+    npm install
 
 
 ### S6 Configuration
