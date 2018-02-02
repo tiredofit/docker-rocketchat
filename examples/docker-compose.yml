@@ -3,7 +3,7 @@ version: '2'
 services:
   rocketchat-app:
     container_name: rocketchat-app
-    image: registry.selfdesign.org/docker/rocketchat:2.0
+    image: tiredofit/rocketchat:2.0
     #ports:
       #- 3000:3000
     environment: 
@@ -22,9 +22,9 @@ services:
       - MONGO_URL=mongodb://rocketchat-db:27017/rocketchat
       - MONGO_OPLOG_URL=mongodb://rocketchat-db:27017/local
       - MAIL_URL=smtp://postfix-relay:25
-      - ADMIN_USERNAME=sdadmin
-      - ADMIN_PASS=SelfDesign2017
-      - ADMIN_EMAIL=noreply@selfdesign.org
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASS=Password123
+      - ADMIN_EMAIL=noreply@example.org
     volumes:
       - ./uploads:/app/uploads
     restart: always
@@ -34,7 +34,7 @@ services:
   rocketchat-db:
     container_name: rocketchat-db
     #image: mongo:3.2
-    image: registry.selfdesign.org/docker/mongo:2.0
+    image: tiredofit/mongo:2.0
     restart: unless-stopped
     volumes:
      - /var/local/db/rocketchat.example.com:/data/db
@@ -45,7 +45,7 @@ services:
 
   rocketchat-db-init:
     container_name: rocketchat-db-init
-    image: registry.selfdesign.org/docker/mongo:2.0
+    image: tiredofit/mongo:2.0
     command: 'mongo rocketchat-db/rocketchat --eval "rs.initiate({ _id: ''rs0'', members: [ { _id: 0, host: ''localhost:27017'' } ]})"'
     depends_on:
       - rocketchat-db
