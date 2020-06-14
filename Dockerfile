@@ -1,46 +1,51 @@
-FROM tiredofit/nodejs:4-latest
-LABEL maintainer="Dave Conroy (dave at tiredofit dot ca)"
+FROM rocketchat/rocket.chat:latest
+USER root
 
-### Set Environment Variables
-ENV RC_VERSION=0.59.1 \
-# needs a mongoinstance - defaults to container linking with alias 'db'
-    MONGO_URL=mongodb://db:27017/meteor \
-    HOME=/tmp \
-    PORT=3000 \
-    ROOT_URL=http://localhost:3000 \
-    Accounts_AvatarStorePath=/app/uploads/avatars
+ENV S6_OVERLAY_VERSION=v2.0.0.1 \
+    TIMEZONE=Etc/GMT \
+    ENABLE_CRON=FALSE \
+    ENABLE_SMTP=FALSE \
+    ENABLE_ZABBIX=TRUE \
+    ZABBIX_VERSION=${ZABBIX_VERSION} \
 
-### Create Accounts
-RUN addgroup -g 1100 rocketchat && \
-    adduser -Ss /bin/false -u 1100 -G rocketchat -h /app rocketchat && \
-    mkdir -p /app/uploads && \
-    chown rocketchat:rocketchat /app/uploads
+CMD echo "Completed"
 
-### Build Rocketchat
-RUN apk update && \
-    mkdir -p /usr/src && \
-    curl -ssL https://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub && \
-    curl -ssL https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.25-r0/glibc-2.25-r0.apk -o glibc-2.25-r0.apk && \
-    apk add glibc-2.25-r0.apk && \
-    rm -rf glibc-2.25-r0.apk && \
-    apk add --no-cache \
-        curl \
-        g++ \
-        make \
-        python && \
-    cd /app && \
-    curl -fssL "https://download.rocket.chat/build/rocket.chat-${RC_VERSION}.tgz" | tar xvfz - -C /app/ && \
-    cd /app/bundle/programs/server && \
-    npm install
-
-
-### S6 Configuration
-ADD install/s6 /etc/s6
-
-### Networking Configuration
-EXPOSE 3000
+### Dependencies Addon
+  RUN set -x && \
+      apt-get update && \
+      apt-get install -y --no-install-recommends \
+               ca-certificates \
+               curl \
+               less \
+               logrotate \
+               msmtp \
+               nano \
+               netcat \
+               procps \
+               tzdata \
+               vim-tiny \
+               && \
+       curl https://repo.zabbix.com/zabbix-official-repo.key | apt-key add - && \
+       echo 'deb http://security.debian.org/ stretch/updates main contrib non-free' >>/etc/apt/sources.list && \
+       echo 'deb-src http://security.debian.org/ stretch/updates main contrib non-free' >>/etc/apt/sources.list && \
+       echo 'deb http://repo.zabbix.com/zabbix/${ZABBIX_VERSION}/debian stretch main' >>/etc/apt/sources.list && \
+       echo 'deb-src http://repo.zabbix.com/zabbix/${ZABBIX_VERSION}/debian stretch main' >>/etc/apt/sources.list && \
+       apt-get update && \
+       apt-get install -y \
+               zabbix-agent && \
+       apt-get autoremove -y && \
+       apt-get clean -y && \
+       rm -rf /var/lib/apt/lists/* /root/.gnupg /var/log/* && \
+       mkdir -p /assets/cron && \
+       echo "${TIMEZONE}" > /etc/timezone && \
+       dpkg-reconfigure -f noninteractive tzdata && \
+       \
+### S6 Installation
+       curl -sSL https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-amd64.tar.gz | tar xfz - -C /
 
 ### Entrypoint Configuration
-WORKDIR /app/bundle
-ENTRYPOINT ["/init"]
+   ENTRYPOINT ["/init"]
+   CMD []
 
+ ### Add Folders
+   ADD install /
