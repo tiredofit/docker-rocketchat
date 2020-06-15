@@ -1,3 +1,10 @@
+
+## 3.3.2 2020-06-15 <dave at tiredofit dot ca>
+
+   ### Changed
+      - 3.3.1 Cleanup
+
+
 ## 3.3.1 2020-06-06 <dave at tiredofit dot ca>
 
    ### Changed
