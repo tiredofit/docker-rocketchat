@@ -1,4 +1,3 @@
-
 ## 3.3.2 2020-06-15 <dave at tiredofit dot ca>
 
    ### Changed

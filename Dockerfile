@@ -6,12 +6,12 @@ ENV S6_OVERLAY_VERSION=v2.0.0.1 \
     ENABLE_CRON=FALSE \
     ENABLE_SMTP=FALSE \
     ENABLE_ZABBIX=TRUE \
-    ZABBIX_VERSION=${ZABBIX_VERSION} \
+    ZABBIX_VERSION=5.0
 
 CMD echo "Completed"
 
 ### Dependencies Addon
-  RUN set -x && \
+RUN set -x && \
       apt-get update && \
       apt-get install -y --no-install-recommends \
                ca-certificates \
@@ -26,10 +26,10 @@ CMD echo "Completed"
                vim-tiny \
                && \
        curl https://repo.zabbix.com/zabbix-official-repo.key | apt-key add - && \
-       echo 'deb http://security.debian.org/ stretch/updates main contrib non-free' >>/etc/apt/sources.list && \
-       echo 'deb-src http://security.debian.org/ stretch/updates main contrib non-free' >>/etc/apt/sources.list && \
-       echo 'deb http://repo.zabbix.com/zabbix/${ZABBIX_VERSION}/debian stretch main' >>/etc/apt/sources.list && \
-       echo 'deb-src http://repo.zabbix.com/zabbix/${ZABBIX_VERSION}/debian stretch main' >>/etc/apt/sources.list && \
+       echo "deb http://security.debian.org/ stretch/updates main contrib non-free" >>/etc/apt/sources.list && \
+       echo "deb-src http://security.debian.org/ stretch/updates main contrib non-free" >>/etc/apt/sources.list && \
+       echo "deb http://repo.zabbix.com/zabbix/${ZABBIX_VERSION}/debian stretch main" >>/etc/apt/sources.list && \
+       echo "deb-src http://repo.zabbix.com/zabbix/${ZABBIX_VERSION}/debian stretch main" >>/etc/apt/sources.list && \
        apt-get update && \
        apt-get install -y \
                zabbix-agent && \
