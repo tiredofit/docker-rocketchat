@@ -16,6 +16,7 @@ RUN set -x && \
       apt-get install -y --no-install-recommends \
                ca-certificates \
                curl \
+               gnupg \
                less \
                logrotate \
                msmtp \
@@ -26,10 +27,10 @@ RUN set -x && \
                vim-tiny \
                && \
        curl https://repo.zabbix.com/zabbix-official-repo.key | apt-key add - && \
-       echo "deb http://security.debian.org/ stretch/updates main contrib non-free" >>/etc/apt/sources.list && \
-       echo "deb-src http://security.debian.org/ stretch/updates main contrib non-free" >>/etc/apt/sources.list && \
-       echo "deb http://repo.zabbix.com/zabbix/${ZABBIX_VERSION}/debian stretch main" >>/etc/apt/sources.list && \
-       echo "deb-src http://repo.zabbix.com/zabbix/${ZABBIX_VERSION}/debian stretch main" >>/etc/apt/sources.list && \
+       echo "deb http://security.debian.org/ buster/updates main contrib non-free" >>/etc/apt/sources.list && \
+       echo "deb-src http://security.debian.org/ buster/updates main contrib non-free" >>/etc/apt/sources.list && \
+       echo "deb http://repo.zabbix.com/zabbix/${ZABBIX_VERSION}/debian buster main" >>/etc/apt/sources.list && \
+       echo "deb-src http://repo.zabbix.com/zabbix/${ZABBIX_VERSION}/debian buster main" >>/etc/apt/sources.list && \
        apt-get update && \
        apt-get install -y \
                zabbix-agent && \
