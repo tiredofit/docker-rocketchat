@@ -5,21 +5,13 @@ prepare_service
 PROCESS_NAME="rockethcat"
 
 check_container_initialized
-
-sleep 15
+sleep 10
 mkdir -p /app/uploads
 chown -R rocketchat /app/uploads
 mkdir -p /tmp/state/
 mkdir -p /tmp/userData/
 chown -R rocketchat /tmp/userData
 
-DB_HOST=`echo $MONGO_URL | cut -d/ -f3 | cut -d: -f1` 
-DB_PORT=`echo $MONGO_URL | cut -d/ -f3 | cut -d: -f2`
-
-db_ready mongo 
+db_ready mongo
 
 liftoff
-cd /app/bundle
-
-print_info "Starting Rocketchat"
-exec s6-setuidgid rocketchat node main.js

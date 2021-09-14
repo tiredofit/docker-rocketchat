@@ -1,0 +1,4 @@
+#!/usr/bin/with-contenv bash
+
+DB_HOST=$(echo $MONGO_URL | cut -d/ -f3 | cut -d: -f1)
+DB_PORT=$(echo $MONGO_URL | cut -d/ -f3 | cut -d: -f2)

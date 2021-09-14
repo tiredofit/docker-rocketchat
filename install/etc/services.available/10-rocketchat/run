@@ -1,0 +1,14 @@
+#!/usr/bin/with-contenv bash
+
+source /assets/functions/00-container
+prepare_service
+PROCESS_NAME="rockethcat"
+
+check_container_initialized
+check_service_initialized init
+
+liftoff
+cd /app/bundle
+
+print_start "Starting Rocketchat"
+exec s6-setuidgid rocketchat node main.js

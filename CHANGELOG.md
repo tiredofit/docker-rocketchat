@@ -1,3 +1,9 @@
+## 4.0.0 2021-09-14 <dave at tiredofit dot ca>
+
+   ### Added
+      - Rework image to be pinned against tiredofit/debian:buster
+
+
 ## 3.3.2 2020-06-15 <dave at tiredofit dot ca>
 
    ### Changed
