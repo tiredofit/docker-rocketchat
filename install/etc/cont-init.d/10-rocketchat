@@ -4,7 +4,6 @@ source /assets/functions/00-container
 prepare_service
 PROCESS_NAME="rockethcat"
 
-check_container_initialized
 sleep 10
 mkdir -p /app/uploads
 chown -R rocketchat /app/uploads
