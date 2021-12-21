@@ -1,0 +1,60 @@
+#!/usr/bin/with-contenv bash
+
+source /assets/functions/00-container
+prepare_service both 20-ldap-sync
+PROCESS_NAME="rocketchat-ldap-sync"
+
+check_container_initialized
+
+date >/dev/null
+
+get_auth_token() {
+    tmp_token=$(mktemp)
+    curl http://localhost:3000/api/v1/login -d "user=${LDAP_SYNC_USER}&password=${LDAP_SYNC_PASS}" > ${tmp_token}
+    uid=$(jq -r ".data.userId" ${tmp_token})
+    token=$(jq -r ".data.authToken" ${tmp_token})
+    print_debug "LDAP Sync - ID and Token fetched"
+    rm -rf ${tmp_token}
+}
+
+if [ "$1" != "NOW" ]; then
+    sleep 10
+    liftoff
+elif [ "$1" = "NOW" ]; then
+    LDAP_SYNC_BEGIN=+0
+    MANUAL=TRUE
+fi
+
+get_auth_token
+
+### Container Startup
+print_notice "LDAP Background sync routines Initialized on $(date)"
+
+### Wait for Next time to start backup
+  current_time=$(date +"%s")
+  today=$(date +"%Y%m%d")
+
+  if [[ $LDAP_SYNC_BEGIN =~ ^\+(.*)$ ]]; then
+        waittime=$(( ${BASH_REMATCH[1]} * 60 ))
+  else
+        target_time=$(date --date="${today}${LDAP_SYNC_BEGIN}" +"%s")
+    if [[ "$target_time" < "$current_time" ]]; then
+        target_time=$(($target_time + 24*60*60))
+    fi
+  waittime=$(($target_time - $current_time))
+  fi
+
+  sleep $waittime
+
+  while true; do
+    print_info "Performing background LDAP Sync"
+    silent curl -X POST -H "X-Auth-Token: ${token}" -H "X-User-ID: ${uid}" http://localhost:3000/api/v1/ldap.syncNow
+
+### Go back to Sleep until next definitions update time
+   if [ "$MANUAL" = "TRUE" ]; then
+        exit 0;
+   else
+   	    print_debug "Sleeping for $LDAP_SYNC_FREQUENCY minutes"
+        sleep $(($LDAP_SYNC_FREQUENCY*60))
+   fi
+done

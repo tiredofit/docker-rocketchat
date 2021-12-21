@@ -2,9 +2,9 @@
 
 source /assets/functions/00-container
 prepare_service
-PROCESS_NAME="rockethcat"
+PROCESS_NAME="rocketchat"
 
-sleep 10
+sleep 6
 mkdir -p /app/uploads
 chown -R rocketchat /app/uploads
 mkdir -p /tmp/state/

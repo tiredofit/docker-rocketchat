@@ -2,3 +2,4 @@
 
 DB_HOST=$(echo $MONGO_URL | cut -d/ -f3 | cut -d: -f1)
 DB_PORT=$(echo $MONGO_URL | cut -d/ -f3 | cut -d: -f2)
+ENABLE_LDAP_BACKGROUND_SYNC=${ENABLE_LDAP_BACKGROUND_SYNC:-"TRUE"}

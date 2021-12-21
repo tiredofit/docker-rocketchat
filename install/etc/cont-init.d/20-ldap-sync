@@ -1,0 +1,14 @@
+#!/usr/bin/with-contenv bash
+
+source /assets/functions/00-container
+prepare_service
+PROCESS_NAME="rocketchat-ldap-sync"
+
+if var_true "${ENABLE_LDAP_BACKGROUND_SYNC}" ; then
+    sanity_var LDAP_SYNC_USER "Username for LDAP Syncing"
+    sanity_var LDAP_SYNC_PASS "Password for LDAP Syncing"
+else
+    service_stop 20-ldap-sync
+fi
+
+liftoff
