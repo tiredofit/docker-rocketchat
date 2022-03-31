@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv bash
+#!/command/with-contenv bash
 
 ENABLE_LDAP_BACKGROUND_SYNC=${ENABLE_LDAP_BACKGROUND_SYNC:-"FALSE"}
 LDAP_SYNC_BEGIN=${LDAP_SYNC_BEGIN:-+0}
