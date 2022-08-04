@@ -1,3 +1,9 @@
+## 4.1.2 2022-08-04 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Fix spelling mistake
+
+
 ## 4.1.1 2022-03-31 <dave at tiredofit dot ca>
 
    ### Added
