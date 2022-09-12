@@ -1,3 +1,9 @@
+## 4.2.0 2022-09-12 <dave at tiredofit dot ca>
+
+   ### Added
+      - Switch to Alpine base
+
+
 ## 4.1.2 2022-08-04 <dave at tiredofit dot ca>
 
    ### Changed

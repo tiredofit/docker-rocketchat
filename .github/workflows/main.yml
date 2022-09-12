@@ -23,7 +23,6 @@ jobs:
         run: |
           git clone "https://github.com/RocketChat/Rocket.Chat" rocketchat
           ROCKETCHAT_VERSION=$(git -C ./rocketchat tag | sort -V | tail -n 1 | sed "s|-.*||g")
-
           DOCKER_IMAGE=${GITHUB_REPOSITORY/docker-/}
           CHANGELOG_VERSION=$(head -n 1 CHANGELOG.md | awk '{print $2'})
 
@@ -79,34 +78,34 @@ jobs:
       - name: Modify
         id: modify
         run: |
-          git clone --depth 1 https://github.com/tiredofit/docker-debian docker-debian
-          sed -i "s|FROM .*|FROM rocketchat/rocket.chat:latest|g" ./docker-debian/Dockerfile
-          sed -i "/FROM .*/a USER root" ./docker-debian/Dockerfile
-          sed -i 's|IMAGE_NAME="tiredofit/debian"|IMAGE_NAME="tiredofit/rocketchat"|g' ./docker-debian/Dockerfile
-          sed -i 's|IMAGE_REPO_URL="https://github.com/tiredofit/docker-debian/"|IMAGE_REPO_URL="https://github.com/tiredofit/docker-rocketchat/"|g' ./docker-debian/Dockerfile
-          cp -R install docker-debian/
-          mkdir -p docker-debian/install/assets/.changelogs
-          cp -R docker-debian/CHANGELOG.md docker-debian/install/assets/.changelogs/tiredofit_docker-debian.md
+          git clone --depth 1 https://github.com/tiredofit/docker-alpine docker-alpine
+          sed -i "s|FROM .*|FROM rocketchat/rocket.chat:latest-alpine|g" ./docker-alpine/Dockerfile
+          sed -i "/FROM .*/a USER root" ./docker-alpine/Dockerfile
+          sed -i 's|IMAGE_NAME="tiredofit/alpine"|IMAGE_NAME="tiredofit/rocketchat"|g' ./docker-alpine/Dockerfile
+          sed -i 's|IMAGE_REPO_URL="https://github.com/tiredofit/docker-alpine/"|IMAGE_REPO_URL="https://github.com/tiredofit/docker-rocketchat/"|g' ./docker-alpine/Dockerfile
+          cp -R install docker-alpine/
+          mkdir -p docker-alpine/install/assets/.changelogs
+          cp -R docker-alpine/CHANGELOG.md docker-alpine/install/assets/.changelogs/tiredofit_docker-alpine.md
 
       - name: Label
         id: Label
         run: |
-          if [ -f "./docker-debian/Dockerfile" ] ; then
-            sed -i "/FROM .*/a LABEL tiredofit.image.git_repository=\"https://github.com/${GITHUB_REPOSITORY}\"" ./docker-debian/Dockerfile
-            sed -i "/FROM .*/a LABEL tiredofit.image.git_commit=\"${GITHUB_SHA}\"" ./docker-debian/Dockerfile
-            sed -i "/FROM .*/a LABEL tiredofit.image.git_committed_by=\"${GITHUB_ACTOR}\"" ./docker-debian/Dockerfile
-            sed -i "/FROM .*/a LABEL tiredofit.image.image_build_date=\"$(date +'%Y-%m-%d %H:%M:%S')\"" ./docker-debian/Dockerfile
+          if [ -f "./docker-alpine/Dockerfile" ] ; then
+            sed -i "/FROM .*/a LABEL tiredofit.image.git_repository=\"https://github.com/${GITHUB_REPOSITORY}\"" ./docker-alpine/Dockerfile
+            sed -i "/FROM .*/a LABEL tiredofit.image.git_commit=\"${GITHUB_SHA}\"" ./docker-alpine/Dockerfile
+            sed -i "/FROM .*/a LABEL tiredofit.image.git_committed_by=\"${GITHUB_ACTOR}\"" ./docker-alpine/Dockerfile
+            sed -i "/FROM .*/a LABEL tiredofit.image.image_build_date=\"$(date +'%Y-%m-%d %H:%M:%S')\"" ./docker-alpine/Dockerfile
             if [ -f "CHANGELOG.md" ] ; then
-              sed -i "/FROM .*/a LABEL tiredofit.image.git_changelog_version=\"$(head -n1 ./CHANGELOG.md | awk '{print $2}')\"" ./docker-debian/Dockerfile
-              mkdir -p docker-debian/install/assets/.changelogs ; cp CHANGELOG.md docker-debian/install/assets/.changelogs/${GITHUB_REPOSITORY/\//_}.md
+              sed -i "/FROM .*/a LABEL tiredofit.image.git_changelog_version=\"$(head -n1 ./CHANGELOG.md | awk '{print $2}')\"" ./docker-alpine/Dockerfile
+              mkdir -p docker-alpine/install/assets/.changelogs ; cp CHANGELOG.md docker-alpine/install/assets/.changelogs/${GITHUB_REPOSITORY/\//_}.md
             fi
 
             if [[ $GITHUB_REF == refs/tags/* ]]; then
-              sed -i "/FROM .*/a LABEL tiredofit.image.git_tag=\"${GITHUB_REF#refs/tags/v}\"" ./docker-debian/Dockerfile
+              sed -i "/FROM .*/a LABEL tiredofit.image.git_tag=\"${GITHUB_REF#refs/tags/v}\"" ./docker-alpine/Dockerfile
             fi
 
             if [[ $GITHUB_REF == refs/heads/* ]]; then
-              sed -i "/FROM .*/a LABEL tiredofit.image.git_branch=\"${GITHUB_REF#refs/heads/}\"" ./docker-debian/Dockerfile
+              sed -i "/FROM .*/a LABEL tiredofit.image.git_branch=\"${GITHUB_REF#refs/heads/}\"" ./docker-alpine/Dockerfile
             fi
           fi
 
@@ -114,8 +113,8 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           builder: ${{ steps.buildx.outputs.name }}
-          context: ./docker-debian/
-          file: ./docker-debian/Dockerfile
+          context: ./docker-alpine/
+          file: ./docker-alpine/Dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ steps.prep.outputs.tags }}
