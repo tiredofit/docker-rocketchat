@@ -1,3 +1,9 @@
+## 4.2.1 2022-10-04 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Switch to using 'node' account instead of 'rocketchat'
+
+
 ## 4.2.0 2022-09-12 <dave at tiredofit dot ca>
 
    ### Added

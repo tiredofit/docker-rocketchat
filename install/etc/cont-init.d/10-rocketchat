@@ -9,7 +9,7 @@ mkdir -p /app/uploads
 chown -R rocketchat /app/uploads
 mkdir -p /tmp/.container/
 mkdir -p /tmp/userData/
-chown -R rocketchat /tmp/userData
+chown -R node /tmp/userData
 
 db_ready mongo
 

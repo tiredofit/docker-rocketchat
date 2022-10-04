@@ -11,4 +11,4 @@ liftoff
 cd /app/bundle
 
 print_start "Starting Rocketchat"
-exec s6-setuidgid rocketchat node main.js
+exec s6-setuidgid node node main.js
