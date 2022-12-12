@@ -1,3 +1,10 @@
+## 4.2.2 2022-12-12 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Change rocketchat user to node
+      - Wait for Port for LDAP Sync
+
+
 ## 4.2.1 2022-10-04 <dave at tiredofit dot ca>
 
    ### Changed

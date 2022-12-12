@@ -6,6 +6,8 @@ PROCESS_NAME="rocketchat-ldap-sync"
 
 check_container_initialized
 
+wait_for_port 127.0.0.1 3000
+
 date >/dev/null
 
 get_auth_token() {

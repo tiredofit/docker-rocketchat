@@ -21,9 +21,9 @@ jobs:
       - name: Prepare
         id: prep
         run: |
-          set -x
           git clone "https://github.com/RocketChat/Rocket.Chat" rocketchat
-          ROCKETCHAT_VERSION=$(git -C ./rocketchat tag | sort -V | tail -n 1 | sed "s|-.*||g")
+          ROCKETCHAT_VERSION=4.8.6
+          #ROCKETCHAT_VERSION=$(git -C ./rocketchat tag | sort -V | tail -n 1 | sed "s|-.*||g")
           DOCKER_IMAGE=${GITHUB_REPOSITORY/docker-/}
           CHANGELOG_VERSION=$(head -n 1 CHANGELOG.md | awk '{print $2'})
 
@@ -80,7 +80,7 @@ jobs:
         id: modify
         run: |
           git clone --depth 1 https://github.com/tiredofit/docker-alpine docker-alpine
-          sed -i "s|FROM .*|FROM rocketchat/rocket.chat:latest-alpine|g" ./docker-alpine/Dockerfile
+          sed -i "s|FROM .*|FROM rocketchat/rocket.chat:4.8.6-alpine|g" ./docker-alpine/Dockerfile
           sed -i "/FROM .*/a USER root" ./docker-alpine/Dockerfile
           sed -i 's|IMAGE_NAME="tiredofit/alpine"|IMAGE_NAME="tiredofit/rocketchat"|g' ./docker-alpine/Dockerfile
           sed -i 's|IMAGE_REPO_URL="https://github.com/tiredofit/docker-alpine/"|IMAGE_REPO_URL="https://github.com/tiredofit/docker-rocketchat/"|g' ./docker-alpine/Dockerfile
