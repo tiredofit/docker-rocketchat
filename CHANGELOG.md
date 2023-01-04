@@ -1,3 +1,9 @@
+## 4.2.3 2023-01-04 <dave at tiredofit dot ca>
+
+   ### Added
+      - Move back to dynamic rocketchat version building
+
+
 ## 4.2.2 2022-12-12 <dave at tiredofit dot ca>
 
    ### Changed

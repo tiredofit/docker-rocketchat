@@ -22,8 +22,7 @@ jobs:
         id: prep
         run: |
           git clone "https://github.com/RocketChat/Rocket.Chat" rocketchat
-          ROCKETCHAT_VERSION=4.8.6
-          #ROCKETCHAT_VERSION=$(git -C ./rocketchat tag | sort -V | tail -n 1 | sed "s|-.*||g")
+          ROCKETCHAT_VERSION=$(git -C ./rocketchat tag | sort -V | tail -n 1 | sed "s|-.*||g")
           DOCKER_IMAGE=${GITHUB_REPOSITORY/docker-/}
           CHANGELOG_VERSION=$(head -n 1 CHANGELOG.md | awk '{print $2'})
 
