@@ -12,7 +12,11 @@ on:
     - '**'
     - '!README.md'
 jobs:
-  docker:
+  image_build:
+    env:
+      docker_distro: docker-alpine
+      build_file: Dockerfile
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,50 +27,90 @@ jobs:
         run: |
           git clone "https://github.com/RocketChat/Rocket.Chat" rocketchat
           ROCKETCHAT_VERSION=$(git -C ./rocketchat tag | sort -V | tail -n 1 | sed "s|-.*||g")
-          DOCKER_IMAGE=${GITHUB_REPOSITORY/docker-/}
           CHANGELOG_VERSION=$(head -n 1 CHANGELOG.md | awk '{print $2'})
 
-          if [[ $GITHUB_REF == refs/heads/* ]]; then
-             if [[ $GITHUB_REF == refs/heads/*/* ]] ; then
-               BRANCH="${DOCKER_IMAGE}:$(echo $GITHUB_REF | sed "s|refs/heads/||g" | sed "s|/|-|g")"
-             else
-               BRANCH=${GITHUB_REF#refs/heads/}
-             fi
+          if [[ "${GITHUB_REF}" == refs/heads/* ]]; then
+              if [[ "${GITHUB_REF}" == refs/heads/*/* ]] ; then
+                  git_branch="${GITHUB_REPOSITORY/docker-/}:$(echo $GITHUB_REF | sed "s|refs/heads/||g" | sed "s|/|-|g")"
+              else
+                  git_branch=${GITHUB_REF#refs/heads/}
+              fi
 
-            case ${BRANCH} in
-              "main" | "master" )
-                  BRANCHTAG="${DOCKER_IMAGE}:${ROCKETCHAT_VERSION}-${CHANGELOG_VERSION}"
-                ;;
-              "develop" )
-                  BRANCHTAG="${DOCKER_IMAGE}:develop"
-                ;;
-              * )
-                  if [ -n "${{ secrets.LATEST }}" ] ; then
-                    if [ "${BRANCHTAG}" = "${{ secrets.LATEST }}" ]; then
-                      BRANCHTAG="${DOCKER_IMAGE}:${BRANCH},${DOCKER_IMAGE}:${BRANCH}-latest,${DOCKER_IMAGE}:latest"
-                    else
-                      BRANCHTAG="${DOCKER_IMAGE}:${BRANCH},${DOCKER_IMAGE}:${BRANCH}-latest"
-                    fi
-                  else
-                    BRANCHTAG="${DOCKER_IMAGE}:${BRANCH},${DOCKER_IMAGE}:${BRANCH}-latest"
-                  fi
-                ;;
-            esac
+              case "${git_branch}" in
+                  "main" | "master" )
+                      branch_tag="${GITHUB_REPOSITORY}:latest"
+                      BRANCHTAG="${GITHUB_REPOSITORY}:${ROCKETCHAT_VERSION}-${CHANGELOG_VERSION}"
+                  ;;
+                  "develop" )
+                      branch_tag="${GITHUB_REPOSITORY}:develop"
+                  ;;
+                  * )
+                      if [ -n "${{ secrets.LATEST }}" ] || [ -n "${{ env.LATEST }}" ]; then
+                          if [ "${branch_tag}" = "${{ secrets.LATEST }}" ] || [ "${{ env.LATEST }}" = "TRUE" ] ; then
+                              branch_tag="${GITHUB_REPOSITORY}:${git_branch},${GITHUB_REPOSITORY}:${git_branch}-latest,${GITHUB_REPOSITORY}:latest"
+                          else
+                              branch_tag="${GITHUB_REPOSITORY}:${git_branch},${GITHUB_REPOSITORY}:${git_branch}-latest"
+                          fi
+                      else
+                          branch_tag="${GITHUB_REPOSITORY}:${git_branch},${GITHUB_REPOSITORY}:${git_branch}-latest"
+                      fi
+                  ;;
+              esac
           fi
 
-          TAGS="${BRANCHTAG}${GITTAG}"
+          if [ -n "${branch_tag}" ] && [ -n "${git_tag}" ]; then
+              image_tags=${branch_tag},${git_tag}
+          else
+              image_tags="${branch_tag}${git_tag}"
+          fi
 
-          echo ::set-output name=tags::${TAGS}
-          echo ::set-output name=docker_image::${DOCKER_IMAGE}
+          echo "dockerhub_repo=${GITHUB_REPOSITORY/docker-/}" >> $GITHUB_ENV
+          dockerhub_images=$(echo "${image_tags}" | sed "s|${GITHUB_REPOSITORY}|docker.io/${GITHUB_REPOSITORY/docker-/}|g")
+          ghcr_images=$(echo "${image_tags}" | sed "s|${GITHUB_REPOSITORY}|ghcr.io/${GITHUB_REPOSITORY}|g")
+          echo "container_images=${dockerhub_images},${ghcr_images}" >> $GITHUB_OUTPUT
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
+          git clone --depth 1 https://github.com/tiredofit/${{ env.docker_distro }} ${{ env.docker_distro }}
+          sed -i "s|FROM .*|FROM rocketchat/rocket.chat:${ROCKETCHAT_VERSION}-$(echo ${docker_distro} | sed "s|docker-||g")|g" ./${{ env.docker_distro }}/${{ env.build_file }}
+          sed -i "/FROM .*/a USER root" ./${{ env.docker_distro }}/${{ env.build_file }}
+          sed -i "s|IMAGE_NAME=.*|IMAGE_NAME=\"tiredofit/rocketchat\" \\\|g" ./${{ env.docker_distro }}/${{ env.build_file }}
+          sed -i "s|${{ env.docker_distro }}/${{ env.build_file }}|docker-rocketchat|g" ./${{ env.docker_distro }}/${{ env.build_file }}
+          cp -R install ${{ env.docker_distro }}/
+          mkdir -p ${{ env.docker_distro }}/install/assets/.changelogs
+          cp -R ${{ env.docker_distro }}/CHANGELOG.md ${{ env.docker_distro }}/install/assets/.changelogs/tiredofit_${{ env.docker_distro }}.md
+
+      - name: Label
+        id: Label
+        run: |
+          image_name=${GITHUB_REPOSITORY/docker-/}
+          if [ -f "${{ env.build_file }}" ] ; then
+              sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_repository=\"https://github.com/${GITHUB_REPOSITORY}\"" ${{ env.docker_distro }}/${{ env.build_file }}
+              sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_commit=\"${GITHUB_SHA}\"" ${{ env.docker_distro }}/${{ env.build_file }}
+              sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_committed_by=\"${GITHUB_ACTOR}\"" ${{ env.docker_distro }}/${{ env.build_file }}
+              sed -i "/FROM .*/a LABEL tiredofit.${image_name}.image_build_date=\"$(date +'%Y-%m-%d %H:%M:%S')\"" ${{ env.docker_distro }}/${{ env.build_file }}
+              sed -i "/FROM .*/a LABEL org.opencontainers.image.source https://github.com/${GITHUB_REPOSITORY}"  ${{ env.docker_distro }}/${{ env.build_file }}
+
+              if [ -f "CHANGELOG.md" ] ; then
+                sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_changelog_version=\"$(head -n1 ./CHANGELOG.md | awk '{print $2}')\"" ${{ env.docker_distro }}/${{ env.build_file }}
+                mkdir -p install/assets/.changelogs ; cp CHANGELOG.md install/assets/.changelogs/${GITHUB_REPOSITORY/\//_}.md
+              fi
+
+              if [[ $GITHUB_REF == refs/tags/* ]]; then
+                sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_tag=\"${GITHUB_REF#refs/tags/v}\"" ${{ env.docker_distro }}/${{ env.build_file }}
+              fi
+
+              if [[ $GITHUB_REF == refs/heads/* ]]; then
+                sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_branch=\"${GITHUB_REF#refs/heads/}\"" ${{ env.docker_distro }}/${{ env.build_file }}
+              fi
+          fi
 
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm,arm64
 
       - name: Login to DockerHub
         if: github.event_name != 'pull_request'
@@ -75,47 +119,31 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Modify
-        id: modify
-        run: |
-          git clone --depth 1 https://github.com/tiredofit/docker-alpine docker-alpine
-          sed -i "s|FROM .*|FROM rocketchat/rocket.chat:4.8.6-alpine|g" ./docker-alpine/Dockerfile
-          sed -i "/FROM .*/a USER root" ./docker-alpine/Dockerfile
-          sed -i 's|IMAGE_NAME="tiredofit/alpine"|IMAGE_NAME="tiredofit/rocketchat"|g' ./docker-alpine/Dockerfile
-          sed -i 's|IMAGE_REPO_URL="https://github.com/tiredofit/docker-alpine/"|IMAGE_REPO_URL="https://github.com/tiredofit/docker-rocketchat/"|g' ./docker-alpine/Dockerfile
-          cp -R install docker-alpine/
-          mkdir -p docker-alpine/install/assets/.changelogs
-          cp -R docker-alpine/CHANGELOG.md docker-alpine/install/assets/.changelogs/tiredofit_docker-alpine.md
-
-      - name: Label
-        id: Label
-        run: |
-          if [ -f "./docker-alpine/Dockerfile" ] ; then
-            sed -i "/FROM .*/a LABEL tiredofit.image.git_repository=\"https://github.com/${GITHUB_REPOSITORY}\"" ./docker-alpine/Dockerfile
-            sed -i "/FROM .*/a LABEL tiredofit.image.git_commit=\"${GITHUB_SHA}\"" ./docker-alpine/Dockerfile
-            sed -i "/FROM .*/a LABEL tiredofit.image.git_committed_by=\"${GITHUB_ACTOR}\"" ./docker-alpine/Dockerfile
-            sed -i "/FROM .*/a LABEL tiredofit.image.image_build_date=\"$(date +'%Y-%m-%d %H:%M:%S')\"" ./docker-alpine/Dockerfile
-            if [ -f "CHANGELOG.md" ] ; then
-              sed -i "/FROM .*/a LABEL tiredofit.image.git_changelog_version=\"$(head -n1 ./CHANGELOG.md | awk '{print $2}')\"" ./docker-alpine/Dockerfile
-              mkdir -p docker-alpine/install/assets/.changelogs ; cp CHANGELOG.md docker-alpine/install/assets/.changelogs/${GITHUB_REPOSITORY/\//_}.md
-            fi
-
-            if [[ $GITHUB_REF == refs/tags/* ]]; then
-              sed -i "/FROM .*/a LABEL tiredofit.image.git_tag=\"${GITHUB_REF#refs/tags/v}\"" ./docker-alpine/Dockerfile
-            fi
-
-            if [[ $GITHUB_REF == refs/heads/* ]]; then
-              sed -i "/FROM .*/a LABEL tiredofit.image.git_branch=\"${GITHUB_REF#refs/heads/}\"" ./docker-alpine/Dockerfile
-            fi
-          fi
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
-        uses: docker/build-push-action@v3
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v4
         with:
           builder: ${{ steps.buildx.outputs.name }}
-          context: ./docker-alpine/
-          file: ./docker-alpine/Dockerfile
-          platforms: linux/amd64
+          context: .
+          file: ./${{ env.docker_distro }}/${{ env.build_file }}
+          platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.prep.outputs.tags }}
+          tags: ${{ steps.prep.outputs.container_images }}
 
+      - name: Update Docker Hub Information
+        if: github.event_name != 'pull_request'
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ env.dockerhub_repo }}
+          short-description: ${{ github.event.repository.description }}
+          readme-filepath: ./README.md
