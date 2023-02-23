@@ -1,3 +1,11 @@
+## 4.3.0 2023-02-23 <dave at tiredofit dot ca>
+
+   ### Added
+      - Add manual build by version capabilities to Github Actions
+      - Debian Base (again)
+      - Tested up to 5.4.3
+
+
 ## 4.2.3 2023-01-04 <dave at tiredofit dot ca>
 
    ### Added

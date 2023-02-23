@@ -14,7 +14,7 @@ on:
 jobs:
   image_build:
     env:
-      docker_distro: docker-alpine
+      docker_distro: docker-debian
       build_file: Dockerfile
 
     runs-on: ubuntu-latest
@@ -26,8 +26,12 @@ jobs:
         id: prep
         run: |
           git clone "https://github.com/RocketChat/Rocket.Chat" rocketchat
-          ROCKETCHAT_VERSION=$(git -C ./rocketchat tag | sort -V | tail -n 1 | sed "s|-.*||g")
-          CHANGELOG_VERSION=$(head -n 1 CHANGELOG.md | awk '{print $2'})
+          if [ -n "${{ github.event.inputs.rocketchatversionlogLevel }}" ] ; then
+              ROCKETCHAT_VERSION=${{ github.event.inputs.rocketchatversionlogLevel }}
+          else
+              ROCKETCHAT_VERSION="$(git -C ./rocketchat tag | sort -V | tail -n 1 | sed "s|-.*||g")"}"
+              CHANGELOG_VERSION=$(head -n 1 CHANGELOG.md | awk '{print $2'})
+          fi
 
           if [[ "${GITHUB_REF}" == refs/heads/* ]]; then
               if [[ "${GITHUB_REF}" == refs/heads/*/* ]] ; then
@@ -38,8 +42,7 @@ jobs:
 
               case "${git_branch}" in
                   "main" | "master" )
-                      branch_tag="${GITHUB_REPOSITORY}:latest"
-                      BRANCHTAG="${GITHUB_REPOSITORY}:${ROCKETCHAT_VERSION}-${CHANGELOG_VERSION}"
+                      branch_tag="${GITHUB_REPOSITORY}:latest,${GITHUB_REPOSITORY}:${ROCKETCHAT_VERSION}-${CHANGELOG_VERSION}"
                   ;;
                   "develop" )
                       branch_tag="${GITHUB_REPOSITORY}:develop"
@@ -66,17 +69,18 @@ jobs:
 
           echo "dockerhub_repo=${GITHUB_REPOSITORY/docker-/}" >> $GITHUB_ENV
           dockerhub_images=$(echo "${image_tags}" | sed "s|${GITHUB_REPOSITORY}|docker.io/${GITHUB_REPOSITORY/docker-/}|g")
-          ghcr_images=$(echo "${image_tags}" | sed "s|${GITHUB_REPOSITORY}|ghcr.io/${GITHUB_REPOSITORY}|g")
+          #ghcr_images=$(echo "${image_tags}" | sed "s|${GITHUB_REPOSITORY}|ghcr.io/${GITHUB_REPOSITORY}|g")
           echo "container_images=${dockerhub_images},${ghcr_images}" >> $GITHUB_OUTPUT
 
           git clone --depth 1 https://github.com/tiredofit/${{ env.docker_distro }} ${{ env.docker_distro }}
-          sed -i "s|FROM .*|FROM rocketchat/rocket.chat:${ROCKETCHAT_VERSION}-$(echo ${docker_distro} | sed "s|docker-||g")|g" ./${{ env.docker_distro }}/${{ env.build_file }}
+          sed -i "s|FROM .*|FROM rocketchat/rocket.chat:${ROCKETCHAT_VERSION}|g" ./${{ env.docker_distro }}/${{ env.build_file }}
           sed -i "/FROM .*/a USER root" ./${{ env.docker_distro }}/${{ env.build_file }}
           sed -i "s|IMAGE_NAME=.*|IMAGE_NAME=\"tiredofit/rocketchat\" \\\|g" ./${{ env.docker_distro }}/${{ env.build_file }}
           sed -i "s|${{ env.docker_distro }}/${{ env.build_file }}|docker-rocketchat|g" ./${{ env.docker_distro }}/${{ env.build_file }}
           cp -R install ${{ env.docker_distro }}/
           mkdir -p ${{ env.docker_distro }}/install/assets/.changelogs
           cp -R ${{ env.docker_distro }}/CHANGELOG.md ${{ env.docker_distro }}/install/assets/.changelogs/tiredofit_${{ env.docker_distro }}.md
+          cp -R ${{ env.docker_distro }}/install/* install/
 
       - name: Label
         id: Label
@@ -134,16 +138,6 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./${{ env.docker_distro }}/${{ env.build_file }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.prep.outputs.container_images }}
-
-      - name: Update Docker Hub Information
-        if: github.event_name != 'pull_request'
-        uses: peter-evans/dockerhub-description@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: ${{ env.dockerhub_repo }}
-          short-description: ${{ github.event.repository.description }}
-          readme-filepath: ./README.md
