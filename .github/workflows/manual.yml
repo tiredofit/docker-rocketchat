@@ -22,10 +22,11 @@ jobs:
       - name: Prepare
         id: prep
         run: |
-          git clone "https://github.com/RocketChat/Rocket.Chat" rocketchat
+          echo "** ROCKETCHAT VERSION: ${github.event.inputs.rocketchatversion}"
           if [ -n "${{ github.event.inputs.rocketchatversion }}" ] ; then
               ROCKETCHAT_VERSION=${{ github.event.inputs.rocketchatversion }}
           else
+              git clone "https://github.com/RocketChat/Rocket.Chat" rocketchat
               ROCKETCHAT_VERSION="$(git -C ./rocketchat tag | sort -V | tail -n 1 | sed "s|-.*||g")"
               CHANGELOG_VERSION=$(head -n 1 CHANGELOG.md | awk '{print $2}')
           fi
