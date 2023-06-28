@@ -25,7 +25,7 @@ jobs:
           echo "** ROCKETCHAT VERSION: ${{ github.event.inputs.rocketchatversion }}"
           ROCKETCHAT_VERSION=${{ github.event.inputs.rocketchatversion }}
           
-          if [ "${ROCKETCHAT_VERSION}" = "" }; ; then
+          if [ "${ROCKETCHAT_VERSION}" = "" }; then
               git clone "https://github.com/RocketChat/Rocket.Chat" rocketchat
               ROCKETCHAT_VERSION="$(git -C ./rocketchat tag | sort -V | tail -n 1 | sed "s|-.*||g")"
           fi
