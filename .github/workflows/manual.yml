@@ -23,8 +23,8 @@ jobs:
         id: prep
         run: |
           git clone "https://github.com/RocketChat/Rocket.Chat" rocketchat
-          if [ -n "${{ github.event.inputs.rocketchatversionlogLevel }}" ] ; then
-              ROCKETCHAT_VERSION=${{ github.event.inputs.rocketchatversionlogLevel }}
+          if [ -n "${{ github.event.inputs.rocketchatversion }}" ] ; then
+              ROCKETCHAT_VERSION=${{ github.event.inputs.rocketchatversion }}
           else
               ROCKETCHAT_VERSION="$(git -C ./rocketchat tag | sort -V | tail -n 1 | sed "s|-.*||g")"
               CHANGELOG_VERSION=$(head -n 1 CHANGELOG.md | awk '{print $2}')
