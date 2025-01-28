@@ -14,7 +14,7 @@ on:
 jobs:
   image_build:
     env:
-      docker_distro: docker-debian
+      docker_distro: docker-alpine
       build_file: Dockerfile
 
     runs-on: ubuntu-latest
@@ -47,8 +47,8 @@ jobs:
                       branch_tag="${GITHUB_REPOSITORY}:develop"
                   ;;
                   * )
-                      if [ -n "${{ secrets.LATEST }}" ] || [ -n "${{ env.LATEST }}" ]; then
-                          if [ "${branch_tag}" = "${{ secrets.LATEST }}" ] || [ "${{ env.LATEST }}" = "TRUE" ] ; then
+                      if [ -n "${{ secrets.LATEST }}" ] || [ -n "${{ vars.LATEST }}" ]; then
+                          if [ "${branch_tag}" = "${{ secrets.LATEST }}" ] || [ "${{ vars.LATEST }}" = "TRUE" ] ; then
                               branch_tag="${GITHUB_REPOSITORY}:${git_branch},${GITHUB_REPOSITORY}:${git_branch}-latest,${GITHUB_REPOSITORY}:latest"
                           else
                               branch_tag="${GITHUB_REPOSITORY}:${git_branch},${GITHUB_REPOSITORY}:${git_branch}-latest"
