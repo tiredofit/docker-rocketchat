@@ -1,3 +1,9 @@
+## 4.3.1 2025-02-03 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Change permissions of /app folder
+
+
 ## 4.3.0 2023-02-23 <dave at tiredofit dot ca>
 
    ### Added

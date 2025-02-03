@@ -5,11 +5,15 @@ prepare_service
 PROCESS_NAME="rocketchat"
 
 sleep 6
-mkdir -p /app/uploads
-chown -R node /app/uploads
-mkdir -p /tmp/.container/
-mkdir -p /tmp/userData/
-chown -R node /tmp/userData
+
+mkdir -p \
+            /app/uploads \
+            /tmp/.container \
+            /tmp/userData/
+
+chown -R node \
+                /app \
+                /tmp/userData
 
 db_ready mongo
 
