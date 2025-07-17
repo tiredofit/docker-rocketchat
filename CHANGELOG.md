@@ -1,3 +1,9 @@
+## 4.3.2 2025-07-17 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Github Action Annoyance
+
+
 ## 4.3.1 2025-02-03 <dave at tiredofit dot ca>
 
    ### Changed
