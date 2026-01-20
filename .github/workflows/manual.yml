@@ -152,4 +152,4 @@ jobs:
           short-description: ${{ github.event.repository.description }}
           readme-filepath: ./README.md
           build-args: |
-            ZABBIX_VERSION=7.4.6
+            ZABBIX_VERSION=7.0.22

@@ -141,4 +141,4 @@ jobs:
           push: true
           tags: ${{ steps.prep.outputs.container_images }}
           build-args: |
-            ZABBIX_VERSION=7.4.6
+            ZABBIX_VERSION=7.0.22
