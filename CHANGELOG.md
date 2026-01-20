@@ -1,3 +1,9 @@
+## 4.3.3 2026-01-20 <dave at tiredofit dot ca>
+
+   ### Changed
+      - Pin Zabbix Agent to 7.0.22
+
+
 ## 4.3.2 2025-07-17 <dave at tiredofit dot ca>
 
    ### Changed
