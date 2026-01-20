@@ -140,3 +140,5 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ steps.prep.outputs.container_images }}
+          build-args: |
+            ZABBIX_VERSION=7.4.6
