@@ -76,6 +76,7 @@ jobs:
           sed -i "/FROM .*/a USER root" ./${{ env.docker_distro }}/${{ env.build_file }}
           sed -i "s|IMAGE_NAME=.*|IMAGE_NAME=\"tiredofit/rocketchat\" \\\|g" ./${{ env.docker_distro }}/${{ env.build_file }}
           sed -i "s|${{ env.docker_distro }}/${{ env.build_file }}|docker-rocketchat|g" ./${{ env.docker_distro }}/${{ env.build_file }}
+          sed -i "s|7.2.6|7.0.22|g" ./${{ env.docker_distro }}/${{ env.build_file }}
           cp -R install ${{ env.docker_distro }}/
           mkdir -p ${{ env.docker_distro }}/install/assets/.changelogs
           cp -R ${{ env.docker_distro }}/CHANGELOG.md ${{ env.docker_distro }}/install/assets/.changelogs/tiredofit_${{ env.docker_distro }}.md
