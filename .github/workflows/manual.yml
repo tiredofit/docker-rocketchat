@@ -151,3 +151,5 @@ jobs:
           repository: ${{ env.dockerhub_repo }}
           short-description: ${{ github.event.repository.description }}
           readme-filepath: ./README.md
+          build-args: |
+            ZABBIX_VERSION=7.4.6
